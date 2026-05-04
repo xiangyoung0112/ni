@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台股量化監測 Bot v6.0 — 完整使用說明書</title>
+    <style>
+        :root {
+            --bg:#f4f6f9; --card:#fff; --text:#1a1a2e;
+            --accent:#0d6efd; --accent2:#6f42c1; --muted:#6c757d;
+            --border:#dee2e6; --code-bg:#f1f3f5; --success:#198754;
+            --warning:#fd7e14; --danger:#dc3545;
+            --shadow:0 2px 12px rgba(0,0,0,0.07);
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:var(--bg); color:var(--text); font-family:"Microsoft JhengHei","PingFang TC",sans-serif; line-height:1.7; }
+        /* ─── 側邊欄 ─── */
+        .sidebar {
+            position:fixed; top:0; left:0; width:260px; height:100vh;
+            background:var(--card); border-right:1px solid var(--border);
+            overflow-y:auto; padding:20px 0; z-index:100;
+            box-shadow:2px 0 8px rgba(0,0,0,0.05);
+        }
+        .sidebar .logo { padding:0 20px 16px; border-bottom:1px solid var(--border); margin-bottom:12px; }
+        .sidebar .logo .title { font-size:0.95rem; font-weight:800; color:var(--accent); }
+        .sidebar .logo .sub { font-size:0.72rem; color:var(--muted); margin-top:2px; }
+        .sidebar nav a {
+            display:block; padding:6px 20px; font-size:0.82rem; color:var(--text);
+            text-decoration:none; border-left:3px solid transparent; transition:0.15s;
+        }
+        .sidebar nav a:hover { background:#f0f4ff; border-left-color:var(--accent); color:var(--accent); }
+        .sidebar nav .sec-head { padding:10px 20px 4px; font-size:0.7rem; font-weight:700; color:var(--muted); letter-spacing:0.05em; text-transform:uppercase; }
+        /* ─── 主內容 ─── */
+        .main { margin-left:260px; padding:40px 48px; max-width:1000px; }
+        /* ─── 標題 ─── */
+        h1 { font-size:2rem; font-weight:900; color:var(--text); margin-bottom:8px; }
+        h2 { font-size:1.35rem; font-weight:800; color:var(--accent); margin:40px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--border); }
+        h3 { font-size:1.05rem; font-weight:700; color:var(--accent2); margin:24px 0 10px; }
+        h4 { font-size:0.93rem; font-weight:700; margin:16px 0 6px; }
+        p { margin-bottom:10px; font-size:0.9rem; }
+        /* ─── 卡片 ─── */
+        .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:var(--shadow); }
+        .card-warn { border-left:4px solid var(--warning); background:#fff9f0; }
+        .card-info { border-left:4px solid var(--accent); background:#f0f6ff; }
+        .card-success { border-left:4px solid var(--success); background:#f0fff4; }
+        .card-danger { border-left:4px solid var(--danger); background:#fff0f0; }
+        /* ─── 指令表格 ─── */
+        .cmd-table { width:100%; border-collapse:collapse; margin:12px 0; font-size:0.85rem; }
+        .cmd-table th { background:#f0f4ff; padding:8px 12px; text-align:left; font-weight:700; border-bottom:2px solid var(--border); }
+        .cmd-table td { padding:8px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+        .cmd-table tr:hover { background:#f8f9fa; }
+        .cmd-table .cmd { font-family:monospace; font-weight:700; color:var(--accent); white-space:nowrap; }
+        .cmd-table .badge { display:inline-block; font-size:0.7rem; padding:2px 7px; border-radius:10px; font-weight:600; margin-right:4px; }
+        .badge-red { background:#ffe0e0; color:#c0392b; }
+        .badge-blue { background:#e0eeff; color:#1a5fa8; }
+        .badge-green { background:#e0ffe8; color:#1a7a3a; }
+        .badge-purple { background:#f0e0ff; color:#7a1aa8; }
+        .badge-orange { background:#fff0e0; color:#a85a1a; }
+        /* ─── 程式碼 ─── */
+        code { background:var(--code-bg); border:1px solid var(--border); border-radius:4px; padding:1px 6px; font-family:'Consolas','Monaco',monospace; font-size:0.82rem; color:#c0392b; }
+        pre { background:var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:16px; font-size:0.82rem; overflow-x:auto; margin:12px 0; line-height:1.6; }
+        pre code { background:none; border:none; padding:0; color:var(--text); }
+        /* ─── 步驟 ─── */
+        .steps { counter-reset:step; }
+        .step { display:flex; gap:14px; margin-bottom:16px; }
+        .step::before { counter-increment:step; content:counter(step); min-width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-weight:700; font-size:0.82rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+        .step-body { flex:1; }
+        .step-body strong { display:block; margin-bottom:4px; font-size:0.92rem; }
+        /* ─── 訊號表格 ─── */
+        .sig-group { margin-bottom:20px; }
+        .sig-group h4 { background:var(--code-bg); padding:6px 12px; border-radius:6px; margin-bottom:8px; }
+        .sig-row { display:flex; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); font-size:0.83rem; align-items:flex-start; }
+        .sig-name { min-width:180px; font-weight:600; }
+        .sig-type { min-width:50px; font-size:0.72rem; padding:2px 6px; border-radius:10px; font-weight:700; text-align:center; }
+        .sig-bull { background:#d4edda; color:#155724; }
+        .sig-bear { background:#f8d7da; color:#721c24; }
+        .sig-desc { color:var(--muted); flex:1; }
+        /* ─── 公式 ─── */
+        .formula { background:linear-gradient(135deg,#f0f4ff,#f8f0ff); border:1px solid #c5d5ff; border-radius:10px; padding:14px 18px; font-family:monospace; font-size:0.88rem; margin:10px 0; }
+        /* ─── 流程圖 ─── */
+        .flow { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:14px 0; }
+        .flow-box { background:var(--accent); color:#fff; padding:6px 14px; border-radius:6px; font-size:0.82rem; font-weight:600; }
+        .flow-box.green { background:var(--success); }
+        .flow-box.orange { background:var(--warning); }
+        .flow-box.red { background:var(--danger); }
+        .flow-box.purple { background:var(--accent2); }
+        .flow-arrow { color:var(--muted); font-size:1.2rem; }
+        /* ─── 佈局 ─── */
+        .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+        ul, ol { padding-left:20px; font-size:0.88rem; }
+        li { margin-bottom:5px; }
+        table.simple { width:100%; border-collapse:collapse; font-size:0.84rem; margin:12px 0; }
+        table.simple th { background:var(--code-bg); padding:7px 10px; font-weight:700; border:1px solid var(--border); }
+        table.simple td { padding:7px 10px; border:1px solid var(--border); vertical-align:top; }
+        .emoji-list { list-style:none; padding:0; }
+        .emoji-list li { padding:4px 0; font-size:0.88rem; }
+        .tag { display:inline-block; font-size:0.72rem; padding:1px 7px; border-radius:10px; margin-right:4px; font-weight:600; vertical-align:middle; }
+        .tag-new { background:#cff4fc; color:#0a4d5c; }
+        .tag-v6 { background:#e8d5ff; color:#5a1ea8; }
+        hr.sec { margin:40px 0; border-color:var(--border); }
+        @media(max-width:768px) { .sidebar{display:none;} .main{margin-left:0;padding:20px;} .grid2,.grid3{grid-template-columns:1fr;} }
+    </style>
+</head>
+<body>
+
+<!-- 側邊導覽 -->
+<div class="sidebar">
+    <div class="logo">
+        <div class="title">📊 Bot v6.0 說明書</div>
+        <div class="sub">台股量化監測 Ultra Intelligence</div>
+    </div>
+    <nav>
+        <div class="sec-head">🚀 快速開始</div>
+        <a href="#install">安裝環境</a>
+        <a href="#config">設定 Token</a>
+        <a href="#run">啟動程式</a>
+
+        <div class="sec-head">📱 Telegram 指令</div>
+        <a href="#cmd-scan">掃描相關</a>
+        <a href="#cmd-check">個股查詢</a>
+        <a href="#cmd-market">大盤指令</a>
+        <a href="#cmd-manage">管理指令</a>
+        <a href="#cmd-fav">自選股</a>
+        <a href="#cmd-info">說明指令</a>
+
+        <div class="sec-head">📖 功能詳解</div>
+        <a href="#scan-flow">掃描流程</a>
+        <a href="#categories">掃描分類</a>
+        <a href="#scoring">評分系統</a>
+        <a href="#signals">訊號字典</a>
+        <a href="#check-tabs">個股分析頁</a>
+
+        <div class="sec-head">⚙️ 技術架構</div>
+        <a href="#arch">系統架構</a>
+        <a href="#models">v6 模型</a>
+        <a href="#scheduler">調度機制</a>
+
+        <div class="sec-head">🛠️ 常見問題</div>
+        <a href="#faq">FAQ</a>
+        <a href="#errors">錯誤排除</a>
+    </nav>
+</div>
+
+<!-- 主內容 -->
+<div class="main">
+
+<h1>🤖 台股量化監測 Telegram Bot</h1>
+<p style="font-size:1rem;color:var(--muted);">v6.0 Ultra Intelligence Edition｜完整使用說明書</p>
+
+<div class="card card-info" style="margin-top:20px;">
+    <strong>📌 本說明書涵蓋</strong>：安裝部署、所有 Telegram 指令、掃描策略說明、評分系統原理、v6.0 新模型解析、常見問題排除。
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="install">🚀 一、環境安裝</h2>
+
+<h3>系統需求</h3>
+<div class="grid2">
+<div class="card">
+    <h4>最低配置</h4>
+    <ul class="emoji-list">
+        <li>🖥️ 2 vCPU（建議 GCP e2-medium）</li>
+        <li>💾 4 GB RAM</li>
+        <li>💿 10 GB 硬碟</li>
+        <li>🐍 Python 3.11.2+</li>
+        <li>🌐 穩定網路（yfinance 需要）</li>
+    </ul>
+</div>
+<div class="card">
+    <h4>推薦配置</h4>
+    <ul class="emoji-list">
+        <li>🖥️ GCP e2-medium（台灣區節點）</li>
+        <li>💾 4 GB RAM</li>
+        <li>⏱️ 掃全台股約 20 分鐘</li>
+        <li>💰 每月約 USD $13</li>
+    </ul>
+</div>
+</div>
+
+<h3>套件安裝指令</h3>
+<pre><code># 必裝套件
+pip install python-telegram-bot==20.x nest_asyncio numpy pandas yfinance
+pip install scipy scikit-learn aiosqlite
+
+# 強烈建議安裝（啟用進階功能）
+pip install hmmlearn      # HMM 市場體制辨識 [v6-B]
+pip install filterpy      # 卡爾曼濾波 [v6-C]
+pip install numba         # JIT 加速（KAMA/RSI/ATR/Bayes）
+pip install twstock       # 台股代號清單（1800檔）
+
+# 可選
+pip install psutil        # /status 硬體監控
+pip install openpyxl      # /export Excel 匯出</code></pre>
+
+<div class="card card-warn">
+    <strong>⚠️ Python 3.11.2 相容性注意</strong>：<code>numba</code> 建議版本 0.58+，<code>hmmlearn</code> 建議 0.3+。若安裝失敗，Bot 會自動降級至 Python 純計算版本。
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="config">⚙️ 二、設定 Bot Token</h2>
+
+<div class="steps">
+    <div class="step">
+        <div class="step-body">
+            <strong>向 @BotFather 申請 Token</strong>
+            在 Telegram 搜尋 <code>@BotFather</code>，輸入 <code>/newbot</code>，依指示命名，取得 Token（格式：<code>1234567890:AAF_xxxxx</code>）。
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-body">
+            <strong>填入程式碼</strong>
+            開啟 <code>main.py</code>，找到以下行並替換：
+            <pre><code>TOKEN = "你的Token"   # ← 替換這裡</code></pre>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-body">
+            <strong>（建議）用環境變數更安全</strong>
+            <pre><code>import os
+TOKEN = os.environ.get("TG_TOKEN", "")  # 設定環境變數 TG_TOKEN</code></pre>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="run">▶️ 三、啟動程式</h2>
+
+<pre><code># 直接執行
+python main.py
+
+# 背景常駐（Linux 推薦）
+nohup python main.py > bot.log 2>&1 &
+
+# 用 screen 保持 session
+screen -S tgbot
+python main.py
+# Ctrl+A, D 分離 session
+
+# 確認運行
+ps aux | grep main.py</code></pre>
+
+<div class="card card-success">
+    <strong>✅ 啟動後第一件事</strong>：在 Telegram 輸入 <code>/start</code> 確認機器人回應，再輸入 <code>/update</code> 啟動背景掃描循環。
+</div>
+
+<h3>自動排程說明</h3>
+<ul>
+    <li>🕗 <strong>08:00</strong>：系統自動恢復（夜間暫停後）</li>
+    <li>🕙 <strong>22:00</strong>：系統自動暫停（夜間休息）</li>
+    <li>循環間隔：<strong>每輪休息 5 分鐘</strong>（<code>BG_SCAN_REST = 300</code>）</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════ -->
+<hr class="sec">
+<h2 id="cmd-scan">📱 四、Telegram 指令完整說明</h2>
+
+<h3 id="cmd-scan">4-1｜掃描相關指令</h3>
+
+<table class="cmd-table">
+    <thead><tr><th style="width:180px;">指令</th><th>功能說明</th><th style="width:100px;">類型</th></tr></thead>
+    <tbody>
+        <tr>
+            <td class="cmd">/buy</td>
+            <td>
+                <strong>掃描清單中心</strong>—開啟快取取用選單。<br>
+                顯示 6 個分類的快取狀態（✅有快取/❌無快取）及更新時間。<br>
+                <em>點擊按鈕秒取清單，無需等待重新掃描。</em>
+            </td>
+            <td><span class="badge badge-green">快</span>秒回</td>
+        </tr>
+        <tr>
+            <td class="cmd">/scan</td>
+            <td>
+                <strong>快取狀態總覽</strong>—顯示所有分類的快取數量與更新時間。<br>
+                同時顯示當前市場體制、大盤廣度狀態。
+            </td>
+            <td><span class="badge badge-blue">查詢</span></td>
+        </tr>
+        <tr>
+            <td class="cmd">/update</td>
+            <td>
+                <strong>啟動背景掃描循環</strong>—開始全台股掃描。<br>
+                掃描順序：強勢股→黑馬股→回調→止跌→今跌看好→長線看好→大盤廣度→休息5分→重複。<br>
+                <em>⚠️ 掃描中系統仍可正常使用 /check 指令（紅燈優先機制）。</em>
+            </td>
+            <td><span class="badge badge-red">系統</span></td>
+        </tr>
+        <tr>
+            <td class="cmd">/reupdate</td>
+            <td>
+                <strong>停止背景掃描循環</strong>—發送停止訊號，當前批次完成後停止。<br>
+                快取資料仍保留，可繼續用 /buy 取用。
+            </td>
+            <td><span class="badge badge-red">系統</span></td>
+        </tr>
+        <tr>
+            <td class="cmd">/stop</td>
+            <td><strong>立即中斷</strong>當前掃描批次（不等批次完成）。</td>
+            <td><span class="badge badge-red">緊急</span></td>
+        </tr>
+        <tr>
+            <td class="cmd">/close</td>
+            <td><strong>暫停</strong>背景掃描（不關閉循環，等待恢復）。<br>用於臨時節省資源或手動操盤時暫停干擾。</td>
+            <td><span class="badge badge-orange">暫停</span></td>
+        </tr>
+        <tr>
+            <td class="cmd">/open</td>
+            <td><strong>恢復</strong>已暫停的背景掃描。</td>
+            <td><span class="badge badge-green">恢復</span></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>📋 /buy 選單說明</h4>
+<div class="card">
+    <p>點擊 <code>/buy</code> 後，會出現以下按鈕：</p>
+    <table class="simple">
+        <tr><th>按鈕</th><th>說明</th></tr>
+        <tr><td>📈 強勢股 ✅xxx分前</td><td>取用已快取的強勢股清單，即時顯示</td></tr>
+        <tr><td>🦄 黑馬股 ✅xxx分前</td><td>低量蓄勢黑馬股清單</td></tr>
+        <tr><td>🔻 回調 ✅xxx分前</td><td>強勢回調買點清單</td></tr>
+        <tr><td>🔄 止跌 ✅xxx分前</td><td>技術底部止跌清單</td></tr>
+        <tr><td>📉 今跌看好 ✅xxx分前</td><td><span class="tag tag-new">NEW</span>今日下跌但技術面仍多頭的短線機會</td></tr>
+        <tr><td>💚 長線看好 ✅xxx分前</td><td><span class="tag tag-new">NEW</span>Hurst趨勢型+Alpha正超額的長線標的</td></tr>
+        <tr><td>🔔 重掃強勢+黑馬</td><td>立即觸發強勢股+黑馬股掃描（需等待約15~20分鐘）</td></tr>
+        <tr><td>🔻 重掃回調</td><td>立即觸發回調掃描</td></tr>
+        <tr><td>🔄 重掃止跌</td><td>立即觸發止跌掃描</td></tr>
+        <tr><td>📉 重掃今跌看好</td><td>立即觸發今跌看好掃描</td></tr>
+        <tr><td>📅 重掃長線看好</td><td>立即觸發長線看好掃描</td></tr>
+    </table>
+    <p style="margin-top:8px;font-size:0.82rem;color:var(--muted);">每頁顯示 10 檔，可翻頁瀏覽。點選「返回掃描選單」回到主選單。</p>
+</div>
+
+<!-- ─────── -->
+<h3 id="cmd-check">4-2｜個股深度分析 /check</h3>
+
+<table class="cmd-table">
+    <thead><tr><th style="width:220px;">指令</th><th>功能說明</th></tr></thead>
+    <tbody>
+        <tr>
+            <td class="cmd">/check 2330</td>
+            <td>以股票代號查詢（台積電）</td>
+        </tr>
+        <tr>
+            <td class="cmd">/check 台積電</td>
+            <td>以中文股票名稱查詢</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="card card-warn">
+    <strong>🔴 紅燈機制</strong>：執行 /check 時，系統立即暫停背景掃描（最高優先），分析完成後自動恢復。分析通常需 5~30 秒。
+</div>
+
+<h4>分析報告的四個分頁</h4>
+<div class="grid2">
+<div class="card">
+    <strong>📊 綜合建議（預設）</strong>
+    <ul style="margin-top:8px;">
+        <li>行動建議（強烈買入/逢低買入/觀察）</li>
+        <li>DBN 評分與信心度進度條</li>
+        <li>均線方向 + 卡爾曼趨勢</li>
+        <li>大盤廣度狀態</li>
+        <li>進場區間 / GMM目標 / 自適應停損</li>
+        <li>建議倉位（凱利公式）</li>
+    </ul>
+</div>
+<div class="card">
+    <strong>📐 技術訊號</strong>
+    <ul style="margin-top:8px;">
+        <li>EMA5/20/60、KAMA、卡爾曼值</li>
+        <li>自適應週期 RSI（FFT動態調整）</li>
+        <li>KD 值與黃金/死亡叉狀態</li>
+        <li>MACD 值與狀態</li>
+        <li>主導週期（天數）</li>
+        <li>量價背離類型</li>
+        <li>DBN 看多/看空訊號列表</li>
+    </ul>
+</div>
+<div class="card">
+    <strong>🔬 進階量化</strong>
+    <ul style="margin-top:8px;">
+        <li>Hurst 指數（趨勢強度）</li>
+        <li>Sortino 比率 + 年化波動率</li>
+        <li>主導週期 + Hilbert 瞬時頻率</li>
+        <li>EVT 肥尾分析（上/下尾機率）</li>
+        <li>Alpha/Beta 相對大盤表現</li>
+        <li>GMM 成交量 POC / 最近支撐壓力</li>
+    </ul>
+</div>
+<div class="card">
+    <strong>🛡️ 風控摘要</strong>
+    <ul style="margin-top:8px;">
+        <li>自適應停損（入場當日 k=3.0）</li>
+        <li>第3日+5%獲利停損（k縮減）</li>
+        <li>ATR(14) 數值</li>
+        <li>建議股數（最大虧損控制）</li>
+        <li>期望值 + 凱利倉位比例</li>
+        <li>流動性評級 + 估算滑價</li>
+    </ul>
+</div>
+</div>
+
+<h4>切換按鈕說明</h4>
+<ul>
+    <li><code>📊綜合</code> / <code>📐技術</code> / <code>🔬量化</code> / <code>🛡️風控</code>：切換分析分頁</li>
+    <li><code>🔄 更新</code>：強制重新抓資料（繞過5分鐘快取）</li>
+    <li><code>5分/15分/60分/日K/週K</code>：切換K線週期（精度不同）</li>
+    <li><code>❌ 關閉</code>：刪除此訊息</li>
+</ul>
+
+<!-- ─────── -->
+<h3 id="cmd-market">4-3｜大盤與體制指令</h3>
+
+<table class="cmd-table">
+    <thead><tr><th style="width:180px;">指令</th><th>功能說明</th></tr></thead>
+    <tbody>
+        <tr>
+            <td class="cmd">/market</td>
+            <td>
+                <strong>大盤儀表板</strong>：顯示台股整體廣度。<br>
+                • 站上月線比例（%）與絕對數量<br>
+                • 市場溫度計：❄️極凍 / 🟩穩健 / 🟨加溫 / 🟥過熱<br>
+                • 當前體制（HMM+EMA融合）<br>
+                • 突破策略是否允許（廣度熔斷狀態）
+            </td>
+        </tr>
+        <tr>
+            <td class="cmd">/regime</td>
+            <td>
+                <strong>即時辨識市場體制</strong>（觸發 HMM 重新計算）。<br>
+                四種體制：🟢多頭 / 🟡盤整 / 🟠震盪 / 🔴空頭<br>
+                並顯示對應的 DBN 評分門檻。
+            </td>
+        </tr>
+        <tr>
+            <td class="cmd">/breadth</td>
+            <td>
+                <strong>大盤廣度診斷</strong>：詳細顯示廣度數據、策略開關狀態、評分倍數。<br>
+                數據尚未更新時會給出診斷建議。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<h4>大盤廣度對掃描策略的影響</h4>
+<table class="simple">
+    <tr><th>廣度（站上月線%）</th><th>狀態</th><th>突破策略</th><th>止跌策略</th><th>評分倍數</th></tr>
+    <tr><td>< 20%</td><td>❄️ 極凍</td><td>❌ 封鎖</td><td>✅</td><td>×0.5</td></tr>
+    <tr><td>20%~40%</td><td>🟦 冷清</td><td>✅</td><td>✅</td><td>×0.8</td></tr>
+    <tr><td>40%~65%</td><td>🟩 穩健</td><td>✅</td><td>✅</td><td>×1.0</td></tr>
+    <tr><td>65%~80%</td><td>🟨 加溫</td><td>✅</td><td>⚠️ 不建議</td><td>×1.1</td></tr>
+    <tr><td>> 80%</td><td>🟥 過熱</td><td>✅ 警示</td><td>❌</td><td>×0.9</td></tr>
+</table>
+
+<!-- ─────── -->
+<h3 id="cmd-manage">4-4｜管理與系統指令</h3>
+
+<table class="cmd-table">
+    <thead><tr><th style="width:180px;">指令</th><th>功能說明</th></tr></thead>
+    <tbody>
+        <tr>
+            <td class="cmd">/status</td>
+            <td>
+                系統狀態報告：掃描狀態、市場體制、背景循環、ProcessPool、訂閱人數、HMM/卡爾曼/Numba 狀態、CPU/RAM（需 psutil）。
+            </td>
+        </tr>
+        <tr>
+            <td class="cmd">/subscribe</td>
+            <td>
+                <strong>訂閱掃描推播</strong>：每次掃描開始/結束時自動推播通知。<br>
+                推播內容：掃描進度、大盤廣度、倒數計時。
+            </td>
+        </tr>
+        <tr>
+            <td class="cmd">/unsubscribe</td>
+            <td>取消訂閱推播（別名：/unsub）。</td>
+        </tr>
+        <tr>
+            <td class="cmd">/vacuum</td>
+            <td>
+                手動整理 SQLite 資料庫（WAL 截斷 + VACUUM）。<br>
+                系統每 5 輪掃描自動執行一次。
+            </td>
+        </tr>
+        <tr>
+            <td class="cmd">/export</td>
+            <td>
+                匯出所有掃描結果為 <strong>Excel (.xlsx)</strong> 檔案。<br>
+                包含：代號、名稱、貝氏評分、觸發訊號、分析文本、分類、時間戳記。<br>
+                可下載後用 index.html 工具進行可視化分析。
+            </td>
+        </tr>
+        <tr>
+            <td class="cmd">/del</td>
+            <td>
+                <strong>清空掃描資料庫</strong>（不可復原）。<br>
+                適用於：資料過舊、重新開始累積時。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ─────── -->
+<h3 id="cmd-fav">4-5｜自選股管理</h3>
+
+<table class="cmd-table">
+    <thead><tr><th style="width:200px;">指令</th><th>功能說明</th></tr></thead>
+    <tbody>
+        <tr>
+            <td class="cmd">/add 2330</td>
+            <td>加入自選股（可用代號或中文名稱）。每個用戶的清單互相獨立。</td>
+        </tr>
+        <tr>
+            <td class="cmd">/add 台積電</td>
+            <td>同上，以中文名稱新增（需安裝 twstock）。</td>
+        </tr>
+        <tr>
+            <td class="cmd">/remove 2330</td>
+            <td>從自選股移除指定標的。</td>
+        </tr>
+        <tr>
+            <td class="cmd">/fav</td>
+            <td>
+                顯示自選股清單，並列出按鈕。<br>
+                點擊按鈕直接觸發個股 v6 深度分析（同 /check）。<br>
+                別名：/portfolio
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ─────── -->
+<h3 id="cmd-info">4-6｜說明與文件指令</h3>
+
+<table class="cmd-table">
+    <thead><tr><th style="width:180px;">指令</th><th>功能說明</th></tr></thead>
+    <tbody>
+        <tr>
+            <td class="cmd">/start</td>
+            <td>顯示機器人介紹與所有指令概覽。</td>
+        </tr>
+        <tr>
+            <td class="cmd">/point</td>
+            <td>
+                <strong>評分系統說明</strong>（4頁翻頁）：<br>
+                第1頁：掃描架構與調度機制<br>
+                第2頁：DBN 貝氏評分原理<br>
+                第3頁：v6 新增模型說明<br>
+                第4頁：進出場優化機制
+            </td>
+        </tr>
+        <tr>
+            <td class="cmd">/math</td>
+            <td>
+                <strong>公式速查表</strong>（19條）：所有核心數學公式一頁顯示。
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════ -->
+<hr class="sec">
+<h2 id="scan-flow">🔄 五、掃描流程詳解</h2>
+
+<h3>二階段 Pipeline</h3>
+<div class="flow">
+    <div class="flow-box">全台 ~1800 檔</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box orange">① 粗篩<br><small>5日資料，批次300</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box green">候選 &lt;200 檔</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box purple">② 精篩<br><small>1年資料，批次50</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box red">結果 → SQLite</div>
+</div>
+
+<h4>第一階段：粗篩（Coarse Filter）</h4>
+<ul>
+    <li>下載近 5 日 OHLCV 資料</li>
+    <li>過濾：日均量 &lt; 1,000,000 股（1000張）的標的直接淘汰</li>
+    <li>依掃描模式選取候選：量能異常、回調、下跌、趨勢突破等</li>
+    <li>批次大小：300 檔，批次間 sleep 1 秒</li>
+</ul>
+
+<h4>第二階段：精篩（Fine Analysis）</h4>
+<ul>
+    <li>下載 1 年完整 OHLCV 資料（需至少 60 個交易日）</li>
+    <li>在 Worker Process（第2個核心）執行 v6 全模型計算</li>
+    <li>包含：DBN、卡爾曼、EVT、GMM、HMM、流動性評估等</li>
+    <li>批次大小：50 檔，批次間 sleep 2 秒</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="categories">📂 六、掃描分類說明</h2>
+
+<div class="grid2">
+<div class="card">
+    <h4>📈 強勢股（explosive）</h4>
+    <p><strong>條件</strong>：估算成交量 > 均量×2 且今日收盤 > 開盤</p>
+    <p><strong>策略</strong>：追買強勢突破，配合量能確認</p>
+    <p><strong>適合</strong>：短線動能交易，1~5日持有</p>
+</div>
+<div class="card">
+    <h4>🦄 黑馬股（dark_horse）</h4>
+    <p><strong>條件</strong>：估算成交量 &lt; 均量×0.8（低調量縮）</p>
+    <p><strong>策略</strong>：潛伏蓄勢，等待量能爆發</p>
+    <p><strong>適合</strong>：中線布局，等待觸發點</p>
+</div>
+<div class="card">
+    <h4>🔻 回調（pullback）</h4>
+    <p><strong>條件</strong>：今日收盤 &lt; 昨日收盤，但均線仍多頭</p>
+    <p><strong>策略</strong>：強勢回調中的買點</p>
+    <p><strong>適合</strong>：趨勢交易者，逢回加碼</p>
+</div>
+<div class="card">
+    <h4>🔄 止跌（reversal）</h4>
+    <p><strong>條件</strong>：近5日跌幅 > 3% + 多項底部訊號</p>
+    <p><strong>策略</strong>：技術底部，等待反彈觸發</p>
+    <p><strong>適合</strong>：逆勢交易，需嚴格停損</p>
+</div>
+<div class="card">
+    <h4>📉 今跌看好（intraday_dip）<span class="tag tag-new">NEW</span></h4>
+    <p><strong>條件</strong>：今日下跌 + EMA5 > EMA20（短線仍多）+ DBN評分 > 1.0</p>
+    <p><strong>策略</strong>：短線修正即買點，結構未破壞</p>
+    <p><strong>適合</strong>：當日或隔日反彈交易</p>
+</div>
+<div class="card">
+    <h4>💚 長線看好（long_term）<span class="tag tag-new">NEW</span></h4>
+    <p><strong>條件</strong>：EMA20 > EMA60 > EMA120 + 近3月漲幅 > 10% + Hurst > 0.55 + Alpha > 0 + Sortino > 0.3</p>
+    <p><strong>策略</strong>：長期持有，看長線趨勢</p>
+    <p><strong>適合</strong>：長線投資者，不在意短線波動</p>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="scoring">📊 七、DBN 評分系統</h2>
+
+<h3>評分公式</h3>
+<div class="formula">
+後驗多頭機率 = 貝氏更新(先驗機率, 所有觸發訊號)
+評分 = (後驗多頭機率 - 0.5) × 10    ∈ [-5, +5]
+體制先驗：多頭=0.60 | 盤整=0.50 | 震盪=0.48 | 空頭=0.40
+</div>
+
+<h3>DBN 共線性處理（[v6-A]）</h3>
+<p>RSI 與 KD 高度相關，若直接連乘會導致機率膨脹。DBN 將訊號分組：</p>
+<ul>
+    <li><strong>動能組</strong>：RSI、KD、自適應RSI、KD超賣金叉 → 只取似然比最大的代表</li>
+    <li><strong>趨勢組</strong>：KAMA、卡爾曼、MACD、自適應MACD、多週期共振 → 同組懲罰</li>
+    <li><strong>量能組</strong>：爆量突破、訂單流強勢、訂單流失衡 → 只取代表</li>
+</ul>
+
+<h3>評分門檻（依體制動態調整）</h3>
+<table class="simple">
+    <tr><th>體制</th><th>門檻</th><th>說明</th></tr>
+    <tr><td>🟢 多頭（bull）</td><td>2.0</td><td>市場強勢，標準放寬</td></tr>
+    <tr><td>🟡 盤整（normal）</td><td>2.5</td><td>正常標準</td></tr>
+    <tr><td>🟠 震盪（high_vol）</td><td>3.5</td><td>波動大，提高門檻</td></tr>
+    <tr><td>🔴 空頭（bear）</td><td>4.0</td><td>空頭市場，極嚴格</td></tr>
+</table>
+
+<h3>信心度等級</h3>
+<ul>
+    <li>🟢 <strong>高（high）</strong>：|後驗 - 0.5| > 0.25（後驗 > 75% 或 < 25%）</li>
+    <li>🟡 <strong>中（medium）</strong>：|後驗 - 0.5| > 0.12</li>
+    <li>🔴 <strong>低（low）</strong>：後驗接近 0.5，訊號混沌</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="signals">🔔 八、訊號字典（完整版）</h2>
+
+<div class="sig-group">
+    <h4>📈 趨勢類訊號</h4>
+    <div class="sig-row"><span class="sig-name">kama_bull <span class="tag tag-v6">v5</span></span><span class="sig-type sig-bull">看多</span><span class="sig-desc">KAMA（自適應移動平均）位於現價下方，趨勢向上</span></div>
+    <div class="sig-row"><span class="sig-name">kama_slope_turn</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">KAMA 連續下行後首次翻正，趨勢轉換訊號</span></div>
+    <div class="sig-row"><span class="sig-name">kalman_bull <span class="tag tag-v6">v6-C</span></span><span class="sig-type sig-bull">看多</span><span class="sig-desc">卡爾曼去噪後斜率向上，且現價在卡爾曼線上方</span></div>
+    <div class="sig-row"><span class="sig-name">macd_golden</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">DIF 上穿 DEA，標準 12/26/9 MACD 黃金交叉</span></div>
+    <div class="sig-row"><span class="sig-name">macd_adaptive <span class="tag tag-v6">v6-E</span></span><span class="sig-type sig-bull">看多</span><span class="sig-desc">FFT 自適應週期 MACD 出現金叉</span></div>
+    <div class="sig-row"><span class="sig-name">macd_divergence</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">價格創新低但 MACD 未創新低，底部背離</span></div>
+    <div class="sig-row"><span class="sig-name">multi_tf_aligned</span><span class="sig-type sig-bull">強多</span><span class="sig-desc">EMA5 > EMA20 > EMA60 且 KAMA 斜率向上，RSI > 50，多週期共振</span></div>
+    <div class="sig-row"><span class="sig-name">hurst_trend</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">Hurst 指數 > 0.55，價格序列具備趨勢慣性，非隨機漫步</span></div>
+</div>
+
+<div class="sig-group">
+    <h4>⚡ 動能類訊號</h4>
+    <div class="sig-row"><span class="sig-name">rsi_strong</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">RSI 介於 50~70，動能強但未達超買</span></div>
+    <div class="sig-row"><span class="sig-name">rsi_adaptive <span class="tag tag-v6">v6-E</span></span><span class="sig-type sig-bull">看多</span><span class="sig-desc">FFT 自適應週期 RSI 進入強勢區（48~70）</span></div>
+    <div class="sig-row"><span class="sig-name">kd_golden</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">K 線上穿 D 線，短線動能轉多</span></div>
+    <div class="sig-row"><span class="sig-name">momentum_accel</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">Savitzky-Golay 平滑後動量為正且加速</span></div>
+    <div class="sig-row"><span class="sig-name">rs_outperform</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">近 20 日漲幅 > 3% 且 RSI > 45，相對大盤強勢</span></div>
+    <div class="sig-row"><span class="sig-name">alpha_positive <span class="tag tag-v6">v6-H</span></span><span class="sig-type sig-bull">看多</span><span class="sig-desc">OLS 回歸年化 Alpha > 5% 且近 20 日超越大盤 ≥ 12 天</span></div>
+    <div class="sig-row"><span class="sig-name">autocorr_positive</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">報酬率自相關係數 > 0.15，趨勢延續性強</span></div>
+    <div class="sig-row"><span class="sig-name">sortino_positive</span><span class="sig-type sig-bull">風報</span><span class="sig-desc">Sortino 比率 > 0.5，下行風險調整後報酬佳</span></div>
+</div>
+
+<div class="sig-group">
+    <h4>📊 量能類訊號</h4>
+    <div class="sig-row"><span class="sig-name">vol_explosion</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">今日成交量 > 20日均量 × 2倍，爆量突破</span></div>
+    <div class="sig-row"><span class="sig-name">order_flow_high</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">訂單流指標 > 0.65，機構買盤積極</span></div>
+    <div class="sig-row"><span class="sig-name">order_flow_imbalance</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">連續3日訂單流 > 0.7，買壓長期集中</span></div>
+    <div class="sig-row"><span class="sig-name">pv_divergence_bull <span class="tag tag-v6">v6-I</span></span><span class="sig-type sig-bull">看多</span><span class="sig-desc">價跌量縮（量縮止跌），空方動能耗盡</span></div>
+    <div class="sig-row"><span class="sig-name">pv_divergence_bear <span class="tag tag-v6">v6-I</span></span><span class="sig-type sig-bear">警示</span><span class="sig-desc">價漲量縮，多方動能衰退，Price/Volume ROC 相關係數 &lt; -0.3</span></div>
+</div>
+
+<div class="sig-group">
+    <h4>🏗️ 結構類訊號</h4>
+    <div class="sig-row"><span class="sig-name">relative_high</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">現價 ≥ 近 20 日最高價 × 99%，創近期新高</span></div>
+    <div class="sig-row"><span class="sig-name">pocket_pivot</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">今日上漲量 > 近10日最大下跌量，口袋支點</span></div>
+    <div class="sig-row"><span class="sig-name">volatility_squeeze</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">布林帶寬度觸近120日最小值，蓄勢待發</span></div>
+    <div class="sig-row"><span class="sig-name">ma_convergence</span><span class="sig-type sig-bull">看多</span><span class="sig-desc">EMA5/10/20/60 差距 &lt; 3%，均線糾結即將方向選擇</span></div>
+    <div class="sig-row"><span class="sig-name">gap_breakout <span class="tag tag-v6">v6-G</span></span><span class="sig-type sig-bull">強多</span><span class="sig-desc">整合後跳空+成交量 > 均量×1.5，有效突破缺口</span></div>
+    <div class="sig-row"><span class="sig-name">gap_exhaustion <span class="tag tag-v6">v6-G</span></span><span class="sig-type sig-bear">警示</span><span class="sig-desc">RSI > 75 時出現跳空，竭盡缺口，反轉警示</span></div>
+    <div class="sig-row"><span class="sig-name">gmm_near_support <span class="tag tag-v6">v6-F</span></span><span class="sig-type sig-bull">看多</span><span class="sig-desc">現價在 GMM 高斯混合模型支撐位 3% 範圍內</span></div>
+    <div class="sig-row"><span class="sig-name">mean_reversion_extreme</span><span class="sig-type sig-bull">反轉</span><span class="sig-desc">RSI &lt; 25 + 收盤 &lt; 布林下軌 + VWAP% &lt; 5%，極度超跌</span></div>
+</div>
+
+<div class="sig-group">
+    <h4>⚠️ 看空警示訊號</h4>
+    <div class="sig-row"><span class="sig-name">vwap_overbought</span><span class="sig-type sig-bear">警示</span><span class="sig-desc">VWAP 百分位 > 90%，追高風險極高</span></div>
+    <div class="sig-row"><span class="sig-name">rsi_overbought</span><span class="sig-type sig-bear">警示</span><span class="sig-desc">RSI > 80，短線超買，可能回調</span></div>
+    <div class="sig-row"><span class="sig-name">kd_death_cross</span><span class="sig-type sig-bear">警示</span><span class="sig-desc">K 線下穿 D 線，短線轉空</span></div>
+    <div class="sig-row"><span class="sig-name">hmm_bear_state <span class="tag tag-v6">v6-B</span></span><span class="sig-type sig-bear">警示</span><span class="sig-desc">HMM 隱馬爾可夫模型判定為空頭狀態</span></div>
+</div>
+
+<div class="sig-group">
+    <h4>🔄 止跌訊號</h4>
+    <div class="sig-row"><span class="sig-name">price_bottom_reversal</span><span class="sig-type sig-bull">止跌</span><span class="sig-desc">跌破近20日低後收回，破底翻</span></div>
+    <div class="sig-row"><span class="sig-name">volume_dry_up</span><span class="sig-type sig-bull">止跌</span><span class="sig-desc">近5日均量 &lt; 20日均量×0.6，拋壓耗盡</span></div>
+    <div class="sig-row"><span class="sig-name">rsi_oversold_hook</span><span class="sig-type sig-bull">止跌</span><span class="sig-desc">RSI 從低於 30 勾起，超賣反彈</span></div>
+    <div class="sig-row"><span class="sig-name">kd_oversold_golden</span><span class="sig-type sig-bull">止跌</span><span class="sig-desc">K、D 均 &lt; 25 且 K 上穿 D</span></div>
+    <div class="sig-row"><span class="sig-name">lower_shadow_strong</span><span class="sig-type sig-bull">止跌</span><span class="sig-desc">下影線 > 實體×2 且 > ATR×0.5，蜘蛛腳止跌K棒</span></div>
+    <div class="sig-row"><span class="sig-name">price_above_support</span><span class="sig-type sig-bull">止跌</span><span class="sig-desc">站回 GMM 支撐位 3% 範圍</span></div>
+    <div class="sig-row"><span class="sig-name">decline_deceleration</span><span class="sig-type sig-bull">止跌</span><span class="sig-desc">連續下跌中最新跌幅 &lt; 前一跌幅，動能遞減</span></div>
+    <div class="sig-row"><span class="sig-name">evt_extreme_low <span class="tag tag-v6">v6-D</span></span><span class="sig-type sig-bull">止跌</span><span class="sig-desc">EVT 廣義帕雷托分佈評估，上尾突破機率 > 6% 且 RSI &lt; 30</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<hr class="sec">
+<h2 id="arch">⚙️ 九、系統架構</h2>
+
+<h3>紅綠燈調度機制</h3>
+<div class="card card-info">
+    <p>系統使用 <strong>TrafficLightScheduler</strong> 確保資源分配：</p>
+    <ul>
+        <li>🔴 <strong>紅燈（/check）</strong>：最高優先級，立即暫停背景掃描，分析完成後釋放</li>
+        <li>🟡 <strong>黃燈（/buy）</strong>：純讀 SQLite WAL，秒回，不影響其他操作</li>
+        <li>🟢 <strong>綠燈（背景掃描）</strong>：低優先級，批次間主動 sleep，隨時可被中斷</li>
+    </ul>
+</div>
+
+<h3>雙核心分工</h3>
+<div class="grid2">
+<div class="card">
+    <h4>核心 1：asyncio Event Loop</h4>
+    <ul>
+        <li>yfinance 批次下載（非同步 I/O）</li>
+        <li>Telegram 訊息收發</li>
+        <li>SQLite WAL 讀寫</li>
+        <li>調度器 green_checkpoint</li>
+    </ul>
+</div>
+<div class="card">
+    <h4>核心 2：Worker Process（spawn）</h4>
+    <ul>
+        <li>v6 全模型計算（CPU 密集）</li>
+        <li>DBN/HMM/Kalman/EVT/GMM</li>
+        <li>Numba JIT 加速數值計算</li>
+        <li>完全不阻塞主 Event Loop</li>
+    </ul>
+</div>
+</div>
+
+<h3>SQLite WAL 快取架構</h3>
+<ul>
+    <li>WAL 模式：讀寫不互鎖（讀快取同時可以寫新資料）</li>
+    <li>128 MB Cache + 256 MB mmap：降低 I/O 瓶頸</li>
+    <li>每5輪自動 VACUUM（縮減 DB 大小）</li>
+    <li>快取 TTL：24小時（<code>DB_EXPIRE_SEC = 86400</code>）</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="models">🧠 十、v6.0 新增模型</h2>
+
+<div class="grid2">
+<div class="card">
+    <h4>[v6-A] 動態貝氏網路（DBN）</h4>
+    <p>DAG 層級共線性懲罰：將 RSI+KD 等高相關訊號分組，每組只取最強代表進行貝氏更新，避免機率膨脹。</p>
+    <div class="formula" style="font-size:0.78rem;">dedup: 同組訊號 → max(|P-0.5|) 的代表<br>penalty: 0.8^(overlap-1)</div>
+</div>
+<div class="card">
+    <h4>[v6-B] 隱馬爾可夫模型（HMM）</h4>
+    <p>3狀態 Gaussian HMM 辨識市場體制：Bull / Normal / Bear。依報酬率均值排序狀態，融合 EMA 雙重確認。</p>
+    <p style="font-size:0.8rem;color:var(--muted);">需安裝 hmmlearn，否則退回 EMA 方法</p>
+</div>
+<div class="card">
+    <h4>[v6-C] 卡爾曼濾波（Kalman）</h4>
+    <p>動態去噪趨勢：狀態向量 [price, velocity]，比 EMA 反應更快。無需 filterpy，有純 numpy 降級版本。</p>
+    <div class="formula" style="font-size:0.78rem;">F=[[1,1],[0,1]]  H=[1,0]<br>x_k = F·x_{k-1} + K·(z-H·x_pred)</div>
+</div>
+<div class="card">
+    <h4>[v6-D] 極值理論（EVT/GPD）</h4>
+    <p>廣義帕雷托分佈擬合報酬率尾部，比常態分佈更準確估計極端事件機率。用於超跌反彈概率計算。</p>
+    <div class="formula" style="font-size:0.78rem;">P(X>u+y) ≈ (n_u/n)·[1+ξy/σ]^(-1/ξ)</div>
+</div>
+<div class="card">
+    <h4>[v6-E] 自適應週期（FFT+Hilbert）</h4>
+    <p>FFT 找出去趨勢後的主導週期，動態調整 RSI/MACD 的參數 n（週期範圍：5~40日）。</p>
+    <div class="formula" style="font-size:0.78rem;">dominant_cycle = argmax|FFT(detrended)|<br>inst_freq = Δphase / (2π)</div>
+</div>
+<div class="card">
+    <h4>[v6-F] 高斯混合模型（GMM）</h4>
+    <p>成交量加權 GMM 找出主要價格聚集區（支撐/壓力），給出每個成分的中心值與強度（混合比例）。</p>
+    <div class="formula" style="font-size:0.78rem;">p(x) = Σ_k π_k · N(x; μ_k, Σ_k)<br>POC = argmax(π_k)</div>
+</div>
+<div class="card">
+    <h4>[v6-G] 跳空缺口分類</h4>
+    <p>依整合程度、成交量比、RSI 位置自動分類：突破缺口（看多）/ 逃逸缺口（延續）/ 竭盡缺口（警示）。</p>
+</div>
+<div class="card">
+    <h4>[v6-H] Alpha/Beta 計算</h4>
+    <p>OLS 回歸個股報酬對大盤報酬，計算年化 Alpha（超額報酬）與 Beta（系統性風險）。</p>
+    <div class="formula" style="font-size:0.78rem;">r_stock = α + β·r_mkt + ε<br>Alpha_年化 = intercept × 252</div>
+</div>
+<div class="card">
+    <h4>[v6-I] 量價背離量化</h4>
+    <p>Price ROC vs Volume ROC 的滾動相關係數，量化量價背離程度：健康突破 / 量縮止跌 / 量縮價漲（弱化）。</p>
+</div>
+<div class="card">
+    <h4>[v6-J] 自適應移動停利</h4>
+    <p>Chandelier Exit 基礎，隨持倉天數與獲利幅度動態縮減 k 值，保護短線利潤。</p>
+    <div class="formula" style="font-size:0.78rem;">k = 3.0 - days×0.05 - profit%×0.1<br>stop = max(H22) - k × ATR14</div>
+</div>
+<div class="card">
+    <h4>[v6-K] 流動性評估</h4>
+    <p>Amihud 非流動性指標 + 滑價估計，過濾日均量過低的假突破訊號。</p>
+    <div class="formula" style="font-size:0.78rem;">Amihud = |R| / Volume × 10^6<br>slippage = spread × vol_ratio</div>
+</div>
+<div class="card">
+    <h4>[v6-L/M/N] 其他機制</h4>
+    <ul style="font-size:0.82rem;">
+        <li><strong>L 風險平價</strong>：協方差矩陣等風險貢獻</li>
+        <li><strong>M 時間停損</strong>：超過N日未發動自動降分</li>
+        <li><strong>N 大盤熔斷</strong>：廣度&lt;20%封鎖突破策略</li>
+    </ul>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<hr class="sec">
+<h2 id="faq">❓ 十一、常見問題 FAQ</h2>
+
+<div class="card card-warn" style="margin-bottom:12px;">
+    <h4>Q：大盤顯示「極凍 0%」但市場明明很好？</h4>
+    <p><strong>A</strong>：這是初始化問題。啟動後 <code>global_market_status</code> 的 <code>total=0</code>，需等待背景掃描的大盤廣度計算完成（第一輪掃描後約更新）。請輸入 <code>/update</code> 啟動背景掃描並等候，或使用 <code>/breadth</code> 查看診斷。</p>
+</div>
+
+<div class="card card-warn" style="margin-bottom:12px;">
+    <h4>Q：Worker v6 計算錯誤 "only 0-dimensional arrays can be converted"？</h4>
+    <p><strong>A</strong>：需更新 <code>_safe_float</code> 函數，加入 numpy 0-d array 處理：<br>
+    <code>if hasattr(val, 'item'): val = val.item()</code></p>
+</div>
+
+<div class="card" style="margin-bottom:12px;">
+    <h4>Q：掃描很慢，要怎麼加速？</h4>
+    <p><strong>A</strong>：① 安裝 <code>numba</code> 啟用 JIT 加速；② 安裝 <code>hmmlearn</code> 和 <code>filterpy</code>；③ 確認 GCP 節點選台灣/亞洲。正常情況全台 1800 檔約 20 分鐘。</p>
+</div>
+
+<div class="card" style="margin-bottom:12px;">
+    <h4>Q：/export 匯出失敗？</h4>
+    <p><strong>A</strong>：需安裝 <code>openpyxl</code>（<code>pip install openpyxl</code>）。若仍失敗，系統會自動降級為 CSV 格式。</p>
+</div>
+
+<div class="card" style="margin-bottom:12px;">
+    <h4>Q：twstock 找不到某些代號？</h4>
+    <p><strong>A</strong>：twstock 資料庫可能未包含新上市股票。可直接用股票代號（純數字）輸入，Bot 會嘗試用 yfinance 解析。</p>
+</div>
+
+<div class="card" style="margin-bottom:12px;">
+    <h4>Q：/check 顯示「找不到 xxx」？</h4>
+    <p><strong>A</strong>：① 確認是否安裝 twstock；② 嘗試改用純數字代號；③ 若是上櫃股票可能需手動加 <code>.TWO</code>。</p>
+</div>
+
+<div class="card" style="margin-bottom:12px;">
+    <h4>Q：如何控制掃描最低成交量門檻？</h4>
+    <p><strong>A</strong>：修改程式碼第 117 行：<code>MIN_VOL_DAILY = 1_000_000</code>（目前設為 100萬股即 1000張）。</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2 id="errors">🛠️ 十二、常見錯誤排除</h2>
+
+<table class="simple">
+    <tr><th>錯誤訊息</th><th>原因</th><th>解決方式</th></tr>
+    <tr>
+        <td><code>hmmlearn 未安裝</code></td>
+        <td>可選庫缺失</td>
+        <td><code>pip install hmmlearn</code>，否則退回 EMA 體制辨識</td>
+    </tr>
+    <tr>
+        <td><code>filterpy 未安裝</code></td>
+        <td>可選庫缺失</td>
+        <td><code>pip install filterpy</code>，否則退回 numpy 卡爾曼</td>
+    </tr>
+    <tr>
+        <td><code>aiosqlite 未安裝</code></td>
+        <td>必要庫缺失</td>
+        <td><code>pip install aiosqlite</code>，否則退回記憶體 JSON 快取</td>
+    </tr>
+    <tr>
+        <td><code>YFinance 下載失敗 (6次後放棄)</code></td>
+        <td>Rate limit 或網路問題</td>
+        <td>等待後重試，或降低 <code>max_calls=5</code></td>
+    </tr>
+    <tr>
+        <td><code>HMM 擬合失敗</code></td>
+        <td>資料不足或數值問題</td>
+        <td>自動退回 EMA 方法，無需處理</td>
+    </tr>
+    <tr>
+        <td>Bot 無回應</td>
+        <td>Token 錯誤或程序崩潰</td>
+        <td>檢查 bot.log，確認 Token 正確</td>
+    </tr>
+    <tr>
+        <td>掃描循環意外停止</td>
+        <td>網路中斷或 exception</td>
+        <td>重新輸入 <code>/update</code> 啟動背景循環</td>
+    </tr>
+</table>
+
+<hr class="sec">
+<div class="card card-success">
+    <strong>📌 建議使用流程（每日）</strong>
+    <ol style="margin-top:8px;">
+        <li>早上 8:00 系統自動恢復，背景掃描開始</li>
+        <li>輸入 <code>/subscribe</code> 訂閱狀態推播</li>
+        <li>掃描完成後，用 <code>/buy</code> 取用清單</li>
+        <li>對感興趣的標的使用 <code>/check 代號</code> 深度分析</li>
+        <li>加入 <code>/add 代號</code> 自選股，下次用 <code>/fav</code> 快速查看</li>
+        <li>用 <code>/export</code> 匯出結果，搭配 index.html 可視化</li>
+        <li>晚上 22:00 系統自動暫停</li>
+    </ol>
+</div>
+
+<p style="margin-top:30px;font-size:0.8rem;color:var(--muted);text-align:center;">
+    台股量化監測 Bot v6.0 Ultra Intelligence Edition｜本說明書僅供技術參考，不構成投資建議
+</p>
+
+</div><!-- /main -->
+</body>
+</html>
