@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>台股 Bot v6.0 — 訊號完整白話說明</title>
+<title>台股 Bot v6.0 — 訊號完整白話說明（新版更新）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -590,9 +590,15 @@ h2 .hl { color: var(--green); }
     <div class="nav-section">⚠️ 警示訊號</div>
     <a href="#warnings"><span class="nav-icon">🚨</span>空頭 / 風險警示</a>
 
+    <div class="nav-section">🆕 新增策略</div>
+    <a href="#scan-modes"><span class="nav-icon">📉</span>今跌看好 / 長線看好</a>
+
     <div class="nav-section">🔄 止跌訊號</div>
     <a href="#reversal"><span class="nav-icon">🔁</span>反彈 / 止跌訊號</a>
 
+
+    <div class="nav-section">🆕 更新記錄</div>
+    <a href="#changelog"><span class="nav-icon">📝</span>版本更新日記</a>
     <div class="nav-section">📊 數值指標</div>
     <a href="#numerics"><span class="nav-icon">🔢</span>Hurst / Sortino 等數字</a>
     <a href="#breadth"><span class="nav-icon">🌡️</span>大盤廣度溫度計</a>
@@ -604,7 +610,7 @@ h2 .hl { color: var(--green); }
 
 <!-- HERO -->
 <div class="hero" id="hero">
-  <div class="hero-badge">📋 訊號百科全書 v6.0</div>
+  <div class="hero-badge">📋 訊號百科全書 v6.0 · 已更新</div>
   <h1>所有訊號<span>完整白話</span>說明</h1>
   <p>這份文件把機器人計算的每一個訊號都用白話解釋清楚：它在看什麼、為什麼重要、出現的時候代表什麼。不需要懂數學，看完就知道每個圓圈是什麼意思。</p>
 </div>
@@ -1077,7 +1083,7 @@ h2 .hl { color: var(--green); }
   <p class="section-desc">量是「行情背後的真實力量」。沒有量的漲是虛的，有量的漲才是真的。</p>
 
   <div class="signal-group">
-    <div class="group-header blue">📊 成交量 / 量價關係 <span class="group-count">5 個訊號</span></div>
+    <div class="group-header blue">📊 成交量 / 量價關係 <span class="group-count">6 個訊號</span></div>
 
     <!-- vol_explosion -->
     <div class="signal-card">
@@ -1177,6 +1183,35 @@ h2 .hl { color: var(--green); }
             <span class="prob-label">多頭時上漲機率</span>
             <div class="prob-bar-wrap"><div class="prob-bar" style="width:70%"></div></div>
             <span class="prob-val">70%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- obv_accumulating -->
+    <div class="signal-card">
+      <div class="signal-header">
+        <div class="signal-emoji blue">📈</div>
+        <div class="signal-title-block">
+          <div class="signal-name">OBV 資金持續流入</div>
+          <div class="signal-code">obv_accumulating</div>
+        </div>
+        <span class="signal-badge badge-bull">看多 ✅</span>
+      </div>
+      <div class="signal-body">
+        <div class="body-block">
+          <div class="body-label">🔍 白話解釋</div>
+          <div class="body-text">OBV（On-Balance Volume，能量潮）把每天的成交量依漲跌方向累加：漲的那天加量、跌的那天減量。OBV 持續上升且在加速，代表資金<em>持續淨流入</em>，悄悄地有人在累積籌碼。這是機構法人偷偷建倉最容易留下的痕跡，即使股價還沒大動，OBV 先行上升往往預示後續的上漲行情。</div>
+          <div class="analogy-box">就像一個水桶裡面水不斷在變多——水面還沒明顯上升，但桶裡的水量已經悄悄增加了。OBV 上升代表有人在持續買進。</div>
+        </div>
+        <div class="body-block">
+          <div class="body-label">📊 觸發條件</div>
+          <div class="body-text">OBV = 累積（漲日加量 / 跌日減量）<br>觸發需同時：<br>① OBV 5日斜率 > 0（方向向上）<br>② OBV 加速度 > 0（斜率還在增加）<br>確保是持續流入而非一次性爆量。</div>
+          <div class="prob-row">
+            <span class="prob-label">多頭時上漲機率</span>
+            <div class="prob-bar-wrap"><div class="prob-bar" style="width:68%"></div></div>
+            <span class="prob-val">68%</span>
           </div>
         </div>
       </div>
@@ -1866,6 +1901,55 @@ h2 .hl { color: var(--green); }
   </div>
 </section>
 
+<!-- NEW SCAN MODES -->
+<section id="scan-modes">
+  <div class="section-label">🆕 新增掃描策略</div>
+  <h2>新增兩種<span class="hl">掃描模式</span></h2>
+  <p class="section-desc">新版新增了「今跌看好」與「長線看好」兩種掃描策略，讓你在不同市場狀況下都能找到合適的進場機會。</p>
+
+  <div class="signal-group">
+    <div class="group-header orange">📉 今跌看好（intraday_dip）</div>
+    <div class="signal-card">
+      <div class="signal-header">
+        <div class="signal-emoji orange">📉</div>
+        <div class="signal-title-block">
+          <div class="signal-name">今跌看好 — 短線反彈策略</div>
+          <div class="signal-code">intraday_dip</div>
+        </div>
+        <span class="signal-badge badge-neutral">新策略 🆕</span>
+      </div>
+      <div class="signal-body single-col">
+        <div class="body-block">
+          <div class="body-label">🔍 策略說明</div>
+          <div class="body-text">篩選<em>今日下跌 2%~7%</em> 但仍有一定成交量（不是冷門的無量下跌）的標的，結合進階指標判斷短線反彈機率。<br><br>適用場景：大盤盤整或偏弱時，找當日過度修正、具反彈潛力的股票。<br><br><strong class="warn">注意：這屬於較短線的操作，風險比強勢股策略高，建議搭配止跌訊號確認後再進場。</strong></div>
+          <div class="analogy-box">就像百貨公司大特賣——今天跌了但還有人買（有量），代表有撿便宜的機會，不是真的沒人要。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="signal-group">
+    <div class="group-header green">📅 長線看好（long_term）</div>
+    <div class="signal-card">
+      <div class="signal-header">
+        <div class="signal-emoji green">📅</div>
+        <div class="signal-title-block">
+          <div class="signal-name">長線看好 — 中長線持有策略</div>
+          <div class="signal-code">long_term</div>
+        </div>
+        <span class="signal-badge badge-neutral">新策略 🆕</span>
+      </div>
+      <div class="signal-body single-col">
+        <div class="body-block">
+          <div class="body-label">🔍 策略說明</div>
+          <div class="body-text">篩選符合以下條件的股票：<br>① <em>近5日股價接近最低點</em>（5日低點離今天 &lt; 3%）——在相對低位<br>② <em>趨勢完整</em>（20日均線 ≥ 60日均線的 98%）——中長期趨勢仍向上<br>③ <em>最大回撤合理</em>（近20日高點到今日收盤的回落 &lt; 15%）——沒有過度修正<br>④ 成交量達基本標準（均量 &gt; 25萬）<br><br>這個策略找的是：<strong>趨勢向上但目前在低位整理</strong>的股票，適合中長線持有。</div>
+          <div class="analogy-box">就像買好公司在它短暫休息的時候進場——趨勢仍好，只是在低位蓄力，不是崩潰。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- NUMERIC INDICATORS -->
 <section id="numerics">
   <div class="section-label">🔢 數值指標</div>
@@ -2023,6 +2107,91 @@ h2 .hl { color: var(--green); }
   <div style="background:rgba(34,212,114,0.04);border:1px solid rgba(34,212,114,0.2);border-radius:12px;padding:18px 20px;">
     <div style="font-weight:800;color:var(--text);margin-bottom:10px;">💡 大盤廣度數據怎麼來的？</div>
     <p style="font-size:0.85rem;color:var(--text-dim);line-height:1.8;">機器人每次完整掃描的最後一步，會下載台灣前 500 檔股票的資料，算出「有多少檔站在20日均線（月線）以上」。這個比率就是大盤廣度。數據每次掃描完成後更新一次（約每20分鐘）。你可以用 <strong style="color:var(--text)">/market</strong> 指令查看即時的大盤廣度和體制判斷。</p>
+  </div>
+</section>
+
+<!-- CHANGELOG -->
+<section id="changelog">
+  <div class="section-label">📝 版本更新日記</div>
+  <h2>版本<span class="hl">更新記錄</span></h2>
+  <p class="section-desc">記錄每個版本對機器人的功能改動，方便追蹤哪些功能是新加的。</p>
+
+  <div style="display:grid;gap:16px;">
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;border-left:4px solid var(--green);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <span style="background:rgba(34,212,114,0.15);border:1px solid rgba(34,212,114,0.4);color:var(--green);font-weight:900;font-size:0.85rem;padding:4px 14px;border-radius:20px;">新版（複製版）</span>
+        <span style="color:var(--text-dim);font-size:0.8rem;font-family:var(--mono);">2025-05 更新</span>
+      </div>
+      <div style="font-weight:800;color:var(--text);font-size:1.05rem;margin-bottom:14px;">🆕 功能新增</div>
+      <div style="display:grid;gap:10px;">
+
+        <div style="background:rgba(34,212,114,0.05);border:1px solid rgba(34,212,114,0.15);border-radius:8px;padding:12px 16px;">
+          <div style="font-weight:700;color:var(--green);font-size:0.85rem;margin-bottom:4px;">📈 新增 OBV 資金流入訊號（obv_accumulating）</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.7;">加入 On-Balance Volume 能量潮指標，偵測資金持續淨流入。OBV 5日斜率向上且加速，觸發此訊號。貝氏可信度 68%，已加入量能訊號組（volume_group）以避免與爆量訊號共線性疊加。</div>
+        </div>
+
+        <div style="background:rgba(34,212,114,0.05);border:1px solid rgba(34,212,114,0.15);border-radius:8px;padding:12px 16px;">
+          <div style="font-weight:700;color:var(--green);font-size:0.85rem;margin-bottom:4px;">📉 新增「今跌看好」掃描策略（intraday_dip）</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.7;">新增短線反彈策略：篩選當日跌幅 2%~7%、有一定成交量的標的。適合大盤偏弱時找日內過度修正、具反彈潛力的股票。/buy 選單、/scan 狀態、/export 匯出均已支援。</div>
+        </div>
+
+        <div style="background:rgba(34,212,114,0.05);border:1px solid rgba(34,212,114,0.15);border-radius:8px;padding:12px 16px;">
+          <div style="font-weight:700;color:var(--green);font-size:0.85rem;margin-bottom:4px;">📅 新增「長線看好」掃描策略（long_term）</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.7;">新增中長線持有策略：篩選近5日接近低點、趨勢仍向上（20MA ≥ 60MA × 0.98）、最大回撤 &lt; 15% 的標的，適合中長線布局。/buy 選單、/scan、/export 均已支援。</div>
+        </div>
+
+        <div style="background:rgba(34,212,114,0.05);border:1px solid rgba(34,212,114,0.15);border-radius:8px;padding:12px 16px;">
+          <div style="font-weight:700;color:var(--green);font-size:0.85rem;margin-bottom:4px;">🧮 DBN 評分上限動態化（防單邊飽和）</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.7;">log-odds 空間的天花板改為動態計算：cap = max(1.5, 3.0 - 訊號數 × 0.15)。訊號越多，上限越嚴格，防止機率被少數極強訊號推到接近 1 的飽和狀態，讓評分分佈更合理。</div>
+        </div>
+
+        <div style="background:rgba(34,212,114,0.05);border:1px solid rgba(34,212,114,0.15);border-radius:8px;padding:12px 16px;">
+          <div style="font-weight:700;color:var(--green);font-size:0.85rem;margin-bottom:4px;">🤖 HMM 改進：多隨機種子 + 二維特徵</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.7;">HMM 擬合改為用三個隨機種子（42, 7, 123）分別訓練，取得分最高的模型。特徵從一維（報酬率）升級為二維（[報酬率, 短期波動度]），體制辨識更準確，減少對起始值敏感的問題。</div>
+        </div>
+
+        <div style="background:rgba(34,212,114,0.05);border:1px solid rgba(34,212,114,0.15);border-radius:8px;padding:12px 16px;">
+          <div style="font-weight:700;color:var(--green);font-size:0.85rem;margin-bottom:4px;">🗺️ GMM 改進：n_init=5 + 容錯機制</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.7;">GMM 高斯混合模型新增 n_init=5（多次初始化取最佳），提升收斂穩定性。並加入容錯機制：當 sample_weight 不支援時，改用加權重複取樣後再擬合，確保在不同環境下都能正常運行。</div>
+        </div>
+
+        <div style="background:rgba(34,212,114,0.05);border:1px solid rgba(34,212,114,0.15);border-radius:8px;padding:12px 16px;">
+          <div style="font-weight:700;color:var(--green);font-size:0.85rem;margin-bottom:4px;">💰 凱利比例改進：小樣本快速近似</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.7;">歷史資料 &lt; 50 筆時，改用勝率 + 平均盈虧比的「簡化凱利公式」快速估算，並限制上限為 10%。樣本充足時仍使用最大化幾何平均的最佳化版本。</div>
+        </div>
+
+        <div style="background:rgba(34,212,114,0.05);border:1px solid rgba(34,212,114,0.15);border-radius:8px;padding:12px 16px;">
+          <div style="font-weight:700;color:var(--green);font-size:0.85rem;margin-bottom:4px;">🔬 新增訊號準確率實證校準函數</div>
+          <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.7;">新增 calibrate_signal_accuracy() 函數，可實證計算某訊號在台股的實際準確率（訊號出現後5日上漲/下跌比例）。目前作為工具函數，未來可用於動態更新訊號可信度，讓貝氏先驗更貼近實際市場。</div>
+        </div>
+
+      </div>
+
+      <div style="font-weight:800;color:var(--text);font-size:1.05rem;margin-top:20px;margin-bottom:14px;">🔧 修復與優化</div>
+      <div style="display:grid;gap:8px;">
+        <div style="background:rgba(77,168,255,0.05);border:1px solid rgba(77,168,255,0.15);border-radius:8px;padding:10px 16px;font-size:0.82rem;color:var(--text-dim);line-height:1.7;">
+          <span style="color:var(--blue);font-weight:700;">大盤熔斷預設值修正：</span>當 global_market_status 尚未初始化（total=0）時，舊版會回傳「極凍」狀態（allow_breakout=False），導致機器人剛啟動時所有突破策略被封鎖。新版改為回傳「穩健」預設值（allow_breakout=True），等待真實廣度數據更新後再套用熔斷機制。
+        </div>
+        <div style="background:rgba(77,168,255,0.05);border:1px solid rgba(77,168,255,0.15);border-radius:8px;padding:10px 16px;font-size:0.82rem;color:var(--text-dim);line-height:1.7;">
+          <span style="color:var(--blue);font-weight:700;">量價背離計算邏輯優化：</span>bullish_divergence 判斷加入連續下跌日的加速度檢驗（負報酬最後一天 vs 倒數第二天），避免量縮但跌勢仍在加速的情況被誤判為止跌訊號。
+        </div>
+        <div style="background:rgba(77,168,255,0.05);border:1px solid rgba(77,168,255,0.15);border-radius:8px;padding:10px 16px;font-size:0.82rem;color:var(--text-dim);line-height:1.7;">
+          <span style="color:var(--blue);font-weight:700;">非同步買單鍵盤修復：</span>_build_buy_keyboard() 函數修復了重複的同步/非同步邏輯衝突（舊版有同步 sqlite3 與非同步 db_latest_ts() 雙重查詢），改為統一使用非同步 asyncio.gather() 批次查詢時間戳，速度更快且不阻塞事件循環。
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;border-left:4px solid var(--text-dim);opacity:0.75;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <span style="background:rgba(139,146,179,0.15);border:1px solid rgba(139,146,179,0.3);color:var(--text-dim);font-weight:900;font-size:0.85rem;padding:4px 14px;border-radius:20px;">可運行版（舊版）</span>
+        <span style="color:var(--text-dim);font-size:0.8rem;font-family:var(--mono);">v6.0 初版</span>
+      </div>
+      <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.7;">
+        初版包含 v6.0 所有核心功能：DBN 動態貝氏網路、HMM 體制辨識、卡爾曼濾波、EVT 極值理論、FFT 自適應週期、GMM 支撐壓力、跳空缺口分類、Alpha/Beta 相對強弱、量價背離量化、自適應停利、流動性評估、大盤廣度熔斷、風險平價。支援四種掃描策略：強勢股、黑馬股、回調買點、止跌進場。
+      </div>
+    </div>
+
   </div>
 </section>
 
